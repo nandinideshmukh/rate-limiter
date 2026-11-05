@@ -12,9 +12,7 @@ services:
       start_period: 5s
 
   server1:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/nandinideshmukh/rate-limiter:main
     restart: unless-stopped
     environment:
       PORT: "8080"
@@ -29,9 +27,7 @@ services:
       - "8081:8080"
 
   server2:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/nandinideshmukh/rate-limiter:main
     restart: unless-stopped
     environment:
       PORT: "8080"
