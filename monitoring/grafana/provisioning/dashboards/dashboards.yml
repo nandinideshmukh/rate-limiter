@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: RateLimitX
+    orgId: 1
+    folder: RateLimitX
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 5
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
