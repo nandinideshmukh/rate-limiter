@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+# kustomization means resources that can be customized. It is a collection of resources and configurations that can be applied to a Kubernetes cluster. The kustomization.yaml file defines the resources, configurations, and transformations that will be applied when deploying the application. In this case, it includes various Kubernetes manifests for deploying a rate limiter application along with its monitoring components like Prometheus and Grafana.
+kind: Kustomization
+
+namespace: ratelimitx
+
+resources:
+  - namespace.yaml
+  - app/deployment.yaml
+  - app/service.yaml
+  - redis/deployment.yaml
+  - redis/service.yaml
+  - ingress/ingress.yaml
+  - monitoring/prometheus/configmap.yaml
+  - monitoring/prometheus/rbac.yaml
+  - monitoring/prometheus/pvc.yaml
+  - monitoring/prometheus/deployment.yaml
+  - monitoring/prometheus/service.yaml
+  - monitoring/grafana/configmap.yaml
+  - monitoring/grafana/pvc.yaml
+  - monitoring/grafana/deployment.yaml
+  - monitoring/grafana/service.yaml
+
+configMapGenerator:
+  - name: grafana-dashboard
+    files:
+      - ratelimitx-dashboard.json=monitoring/grafana/ratelimitx-dashboard.json
+    options:
+      disableNameSuffixHash: true

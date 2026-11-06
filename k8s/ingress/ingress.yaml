@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ratelimitx
+  labels:
+    app.kubernetes.io/name: ratelimitx
+    app.kubernetes.io/component: server
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: ratelimitx.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ratelimitx
+                port:
+                  number: 8080

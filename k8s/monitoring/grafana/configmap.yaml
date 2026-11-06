@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-provisioning
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/component: monitoring
+data:
+  dashboards.yml: |
+    apiVersion: 1
+
+    providers:
+      - name: RateLimitX
+        orgId: 1
+        folder: RateLimitX
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 5
+        allowUiUpdates: true
+        options:
+          path: /etc/grafana/provisioning/dashboards
+  datasources.yml: |
+    apiVersion: 1
+
+    datasources:
+      - name: Prometheus
+        uid: prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus:9090
+        isDefault: true
+        editable: false
