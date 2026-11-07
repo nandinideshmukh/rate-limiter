@@ -693,7 +693,18 @@
             } catch (e) { res = (await probe('/health')) ? 'limited' : 'down' }
             const map = { ok: ['ok', 'System online'], limited: ['warn', 'Reachable (health not readable)'], bad: ['bad', 'Unhealthy'], down: ['bad', 'Offline'] };
             dot($('status'), map[res][0], map[res][1]); dot($('iNginx'), map[res][0], res === 'ok' ? 'Active' : 'Inactive');
-            const p = await probe(PROM + '/-/healthy'); dot($('iProm'), p ? 'ok' : 'bad', p ? 'Active' : 'Inactive');
+            try {
+                const response = await fetch('/health/prometheus');
+                const active = response.ok;
+
+                dot(
+                    $('iProm'),
+                    active ? 'ok' : 'bad',
+                    active ? 'Active' : 'Inactive'
+                );
+            } catch {
+                dot($('iProm'), 'bad', 'Inactive');
+            }
             const g = await probe(GRAF + '/api/health'); dot($('iGraf'), g ? 'ok' : 'bad', g ? 'Active' : 'Inactive');
             return g;
         }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -58,6 +59,37 @@ func newMux(manager *policy.Manager) *http.ServeMux {
 
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Server is healthy!")
+	})
+
+	mux.HandleFunc("/health/prometheus", func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+
+		req, err := http.NewRequestWithContext(
+			ctx,
+			http.MethodGet,
+			"http://prometheus:9090/-/healthy",
+			nil,
+		)
+		if err != nil {
+			http.Error(w, "Prometheus unavailable", http.StatusServiceUnavailable)
+			return
+		}
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			http.Error(w, "Prometheus unavailable", http.StatusServiceUnavailable)
+			return
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			http.Error(w, "Prometheus unhealthy", http.StatusServiceUnavailable)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "Prometheus is healthy")
 	})
 
 	apiHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
