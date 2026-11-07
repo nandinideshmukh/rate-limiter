@@ -1,6 +1,6 @@
 # RateLimitX on Kubernetes (Kind)
 
-This is a local-learning deployment of the existing RateLimitX container image. It does not build an image or change the Go application, Dockerfile, Compose configuration, or CI workflow.
+This is a Kubernetes deployment of the existing RateLimitX container image. It does not build an image or change the Go application, Dockerfile, or Compose configuration. The GitHub Actions workflow publishes the image and deploys these manifests to EKS after successful CI checks on pushes to `main`.
 
 ## Architecture and resources
 
@@ -26,6 +26,7 @@ This is not a production configuration. Redis has one replica, no authentication
 - `kubectl` configured to context `kind-ratelimitx`, and Kustomize support (`kubectl kustomize`).
 - The GHCR image `ghcr.io/nandinideshmukh/rate-limiter:main` is public, or the namespace has a suitable image-pull secret if the package is private.
 - A default StorageClass for the Prometheus and Grafana claims.
+- For EKS, an EKS cluster with worker capacity, an EBS CSI-backed default StorageClass, and namespace `ratelimitx` created before the GitHub Actions deployment role is granted namespace-scoped access.
 
 Check the context and cluster before starting:
 
@@ -54,6 +55,7 @@ From the repository root:
 
 ```powershell
 kubectl config use-context kind-ratelimitx
+kubectl apply -f .\k8s\namespace.yaml
 kubectl kustomize .\k8s\
 kubectl apply -k .\k8s\
 kubectl rollout status deployment/ratelimitx -n ratelimitx --timeout=180s
@@ -62,7 +64,7 @@ kubectl rollout status deployment/prometheus -n ratelimitx --timeout=180s
 kubectl rollout status deployment/grafana -n ratelimitx --timeout=180s
 ```
 
-`kubectl apply -k` creates the namespace if needed, then all app and monitoring resources. Do not apply the manifests until the Ingress Controller and image access prerequisites are satisfied.
+The root Kustomization intentionally excludes `namespace.yaml`: it must already exist. This lets the EKS deployment role be scoped to `ratelimitx` rather than granting it permission to create or modify cluster-wide namespaces. Do not apply the manifests until the Ingress Controller and image access prerequisites are satisfied.
 
 ## Inspect workloads and logs
 
@@ -158,6 +160,98 @@ kubectl rollout status deployment/ratelimitx -n ratelimitx --timeout=180s
 ```
 
 Replace `<tag>` with an actual release tag. The manifest uses `:main` and `imagePullPolicy: Always`.
+
+## Deploy to EKS from GitHub Actions
+
+The `deploy-eks` job in `.github/workflows/ci.yml` runs only for pushes to `main`, after both the `ci` and `publish` jobs succeed. It authenticates to AWS using GitHub's OIDC token (no stored AWS access keys), updates kubeconfig, applies `k8s/`, and waits for all four Deployments to roll out. It does not create an AWS load balancer or use ElastiCache. The app and Redis remain in-cluster; the workflow only deploys Kubernetes resources.
+
+### AWS and EKS setup (one time)
+
+1. Create the EKS cluster and worker nodes. Install the EBS CSI driver and configure a default EBS-backed StorageClass for the Prometheus and Grafana PVCs. Create the namespace with an administrator identity:
+
+   ```powershell
+   aws eks update-kubeconfig --name <cluster-name> --region <aws-region>
+   kubectl create namespace ratelimitx
+   ```
+
+   If the namespace already exists, keep it; do not recreate it.
+
+2. In AWS IAM, add the GitHub Actions OIDC identity provider with URL `https://token.actions.githubusercontent.com` and audience `sts.amazonaws.com` (if it is not already configured in the AWS account).
+
+3. Create an IAM role for GitHub Actions with this trust policy. Replace `<ACCOUNT_ID>` with your AWS account ID. The subject condition limits role assumption to pushes on `main` in this repository:
+
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Effect": "Allow",
+         "Principal": {
+           "Federated": "arn:aws:iam::<ACCOUNT_ID>:oidc-provider/token.actions.githubusercontent.com"
+         },
+         "Action": "sts:AssumeRoleWithWebIdentity",
+         "Condition": {
+           "StringEquals": {
+             "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+             "token.actions.githubusercontent.com:sub": "repo:nandinideshmukh/rate-limiter:ref:refs/heads/main"
+           }
+         }
+       }
+     ]
+   }
+   ```
+
+4. Give that IAM role permission to describe only the target EKS cluster (replace the placeholders):
+
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Effect": "Allow",
+         "Action": "eks:DescribeCluster",
+         "Resource": "arn:aws:eks:<AWS_REGION>:<ACCOUNT_ID>:cluster/<CLUSTER_NAME>"
+       }
+     ]
+   }
+   ```
+
+5. Add the IAM role to the EKS cluster's **Access entries**, then associate `AmazonEKSAdminPolicy` scoped only to namespace `ratelimitx`. The namespace must exist first. For example, using an AWS CLI identity allowed to administer EKS access:
+
+   ```powershell
+   aws eks create-access-entry --cluster-name <cluster-name> --principal-arn <github-actions-role-arn> --type STANDARD
+   aws eks associate-access-policy --cluster-name <cluster-name> --principal-arn <github-actions-role-arn> --policy-arn arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy --access-scope type=namespace,namespaces=ratelimitx
+   ```
+
+   This gives the role administrative permissions within the app namespace so it can manage the Deployments, Services, PVCs, ConfigMaps, and Prometheus RBAC resources in these manifests; it does not grant namespace-creation rights. Use an EKS cluster authentication mode that supports access entries.
+
+6. In the GitHub repository, open **Settings → Secrets and variables → Actions → Variables** and add:
+
+   | Variable | Value |
+   | --- | --- |
+   | `AWS_ROLE_ARN` | ARN of the GitHub Actions IAM role |
+   | `AWS_REGION` | EKS cluster's AWS region, for example `us-west-2` |
+   | `EKS_CLUSTER_NAME` | EKS cluster name |
+
+   These are configuration identifiers, not credentials. Do not add AWS access keys. Ensure the GHCR package is public, or separately configure an image-pull secret in namespace `ratelimitx` for a private package.
+
+### Trigger and verify a deployment
+
+Push a change to the repository's `main` branch. In **GitHub → Actions**, open the `CI` run:
+
+- `ci` runs tests, vet, build, and the Docker build.
+- `publish` publishes the `main` image to GHCR only after CI passes.
+- `deploy-eks` assumes the AWS role through OIDC and applies the Kubernetes manifests only after CI and image publishing succeed.
+
+Check rollout and logs from a machine configured with EKS access:
+
+```powershell
+kubectl get deployments,pods,services,pvc -n ratelimitx
+kubectl rollout status deployment/ratelimitx -n ratelimitx
+kubectl logs -n ratelimitx deployment/ratelimitx --tail=100
+```
+
+The manifests include an Ingress object with class `nginx`, but do not install an Ingress Controller or provide a public endpoint. Without an Ingress Controller, access the app using `kubectl port-forward`. Public access without an AWS load balancer requires a separately operated entry point (for example, a self-managed Ingress Controller exposed through NodePort and appropriate network rules).
 
 ## Troubleshooting
 

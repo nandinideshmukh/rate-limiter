@@ -1,295 +1,740 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RateLimitX -Distributed Rate Limiter</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#fff;min-height:100vh;background:linear-gradient(135deg,#2f3478 0%,#4a3f94 52%,#2f6397 100%) fixed}
-.wrap{max-width:1240px;margin:0 auto;padding:24px;display:flex;flex-direction:column;gap:18px}
-.g{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.24);border-radius:18px;padding:22px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
-.c1{background:rgba(129,140,248,.2)}.c2{background:rgba(56,189,248,.16)}.c3{background:rgba(52,211,153,.16)}.c4{background:rgba(248,113,113,.18)}.c5{background:rgba(251,191,36,.14)}.c6{background:rgba(192,132,252,.2)}.c7{background:rgba(45,212,191,.16)}
-h2{margin:0;font-size:18px;font-weight:600}
-.sub{font-size:13px;color:rgba(255,255,255,.82);margin-top:3px}
-label{display:block;font-size:12px;color:rgba(255,255,255,.9);margin-bottom:6px}
-input,select{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.34);color:#fff;border-radius:10px;padding:0 12px;min-height:44px;font:500 14px inherit;width:100%}
-select option{color:#222}
-button{border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.12);color:#fff;border-radius:10px;padding:0 18px;min-height:44px;font:600 14px inherit;cursor:pointer;transition:background .15s}
-button:hover:not(:disabled){background:rgba(255,255,255,.24)}
-button:disabled{opacity:.45;cursor:not-allowed}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #fde68a;outline-offset:2px}
-.go{background:linear-gradient(135deg,#8b8cf8,#a78bfa);border-color:transparent;color:#1e1b4b}
-.stop{background:rgba(248,113,113,.3);border-color:rgba(254,202,202,.7)}
-.row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.16);font-size:13px}
-.row:last-child{border:0}
-.grid{display:grid;gap:12px}
-.keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:18px}
-.k{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;border-radius:14px;padding:12px 14px;background:rgba(255,255,255,.08);font-weight:500}
-.k.on{background:rgba(167,139,250,.4);border-color:#fff}
-.tg{font-size:11px;border-radius:999px;padding:3px 9px;background:rgba(255,255,255,.2)}
-.pill{font-size:12px;border-radius:999px;padding:6px 12px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3)}
-.d{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;background:#cbd5e1}
-.ok{background:#4ade80}.warn{background:#fbbf24}.bad{background:#f87171}
-.al{font:600 12px ui-monospace,Menlo,Consolas,monospace;border-radius:8px;padding:3px 10px;border:1px solid;display:inline-block}
-.fw{background:rgba(147,197,253,.3);border-color:#93c5fd}.tb{background:rgba(196,181,253,.32);border-color:#c4b5fd}.sc{background:rgba(134,239,172,.28);border-color:#86efac}.sl{background:rgba(253,186,116,.3);border-color:#fdba74}.lk{background:rgba(253,230,138,.28);border-color:#fde68a}
-.s{font-size:30px;font-weight:700;margin-top:2px}
-.tab.on{background:#fff;color:#2d2a6e;border-color:#fff}
-.tab.off{opacity:.75;border-style:dashed}
-.tw{overflow-x:auto}
-table{width:100%;border-collapse:collapse}
-td,th{padding:10px;font-size:13px;text-align:left;border-bottom:1px solid rgba(255,255,255,.2);white-space:nowrap}
-th{font-weight:500;color:rgba(255,255,255,.88);position:sticky;top:0}
-.b2{border-radius:8px;padding:2px 10px;font-weight:600;border:1px solid}
-.a{background:rgba(74,222,128,.3);border-color:#bbf7d0}.r{background:rgba(248,113,113,.34);border-color:#fecaca}.e{background:rgba(251,191,36,.34);border-color:#fde68a}
-.lw{max-height:420px;overflow:auto}
-.gw{position:relative;border:1px solid rgba(255,255,255,.28);border-radius:14px;overflow:hidden;background:rgba(15,18,60,.3);min-height:260px}
-.gf{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:10px;padding:10px}
-.gw iframe{width:100%;border:0;display:block;background:#111}
-.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(30,30,90,.55);text-align:center;padding:20px;z-index:2}
-.hide{display:none!important}
-.spin{width:34px;height:34px;border-radius:50%;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;animation:sp 1s linear infinite}
-@keyframes sp{to{transform:rotate(360deg)}}
-.lg{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:10px 14px;background:rgba(255,255,255,.1);font-size:12px}
-.bn{background:rgba(251,191,36,.25);border:1px solid #fde68a;border-radius:14px;padding:14px 18px;font-size:13px;line-height:1.6}
-@media(max-width:640px){.wrap{padding:12px}.g{padding:16px}.s{font-size:24px}}
-</style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RateLimitX -Distributed Rate Limiter</title>
+    <style>
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #fff;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #2f3478 0%, #4a3f94 52%, #2f6397 100%) fixed
+        }
+
+        .wrap {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px
+        }
+
+        .g {
+            background: rgba(255, 255, 255, .1);
+            border: 1px solid rgba(255, 255, 255, .24);
+            border-radius: 18px;
+            padding: 22px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px)
+        }
+
+        .c1 {
+            background: rgba(129, 140, 248, .2)
+        }
+
+        .c2 {
+            background: rgba(56, 189, 248, .16)
+        }
+
+        .c3 {
+            background: rgba(52, 211, 153, .16)
+        }
+
+        .c4 {
+            background: rgba(248, 113, 113, .18)
+        }
+
+        .c5 {
+            background: rgba(251, 191, 36, .14)
+        }
+
+        .c6 {
+            background: rgba(192, 132, 252, .2)
+        }
+
+        .c7 {
+            background: rgba(45, 212, 191, .16)
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600
+        }
+
+        .sub {
+            font-size: 13px;
+            color: rgba(255, 255, 255, .82);
+            margin-top: 3px
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: rgba(255, 255, 255, .9);
+            margin-bottom: 6px
+        }
+
+        input,
+        select {
+            background: rgba(255, 255, 255, .14);
+            border: 1px solid rgba(255, 255, 255, .34);
+            color: #fff;
+            border-radius: 10px;
+            padding: 0 12px;
+            min-height: 44px;
+            font: 500 14px inherit;
+            width: 100%
+        }
+
+        select option {
+            color: #222
+        }
+
+        button {
+            border: 1px solid rgba(255, 255, 255, .4);
+            background: rgba(255, 255, 255, .12);
+            color: #fff;
+            border-radius: 10px;
+            padding: 0 18px;
+            min-height: 44px;
+            font: 600 14px inherit;
+            cursor: pointer;
+            transition: background .15s
+        }
+
+        button:hover:not(:disabled) {
+            background: rgba(255, 255, 255, .24)
+        }
+
+        button:disabled {
+            opacity: .45;
+            cursor: not-allowed
+        }
+
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible {
+            outline: 2px solid #fde68a;
+            outline-offset: 2px
+        }
+
+        .go {
+            background: linear-gradient(135deg, #8b8cf8, #a78bfa);
+            border-color: transparent;
+            color: #1e1b4b
+        }
+
+        .stop {
+            background: rgba(248, 113, 113, .3);
+            border-color: rgba(254, 202, 202, .7)
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 9px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .16);
+            font-size: 13px
+        }
+
+        .row:last-child {
+            border: 0
+        }
+
+        .grid {
+            display: grid;
+            gap: 12px
+        }
+
+        .keys {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-bottom: 18px
+        }
+
+        .k {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+            text-align: left;
+            border-radius: 14px;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, .08);
+            font-weight: 500
+        }
+
+        .k.on {
+            background: rgba(167, 139, 250, .4);
+            border-color: #fff
+        }
+
+        .tg {
+            font-size: 11px;
+            border-radius: 999px;
+            padding: 3px 9px;
+            background: rgba(255, 255, 255, .2)
+        }
+
+        .pill {
+            font-size: 12px;
+            border-radius: 999px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, .16);
+            border: 1px solid rgba(255, 255, 255, .3)
+        }
+
+        .d {
+            display: inline-block;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            margin-right: 7px;
+            background: #cbd5e1
+        }
+
+        .ok {
+            background: #4ade80
+        }
+
+        .warn {
+            background: #fbbf24
+        }
+
+        .bad {
+            background: #f87171
+        }
+
+        .al {
+            font: 600 12px ui-monospace, Menlo, Consolas, monospace;
+            border-radius: 8px;
+            padding: 3px 10px;
+            border: 1px solid;
+            display: inline-block
+        }
+
+        .fw {
+            background: rgba(147, 197, 253, .3);
+            border-color: #93c5fd
+        }
+
+        .tb {
+            background: rgba(196, 181, 253, .32);
+            border-color: #c4b5fd
+        }
+
+        .sc {
+            background: rgba(134, 239, 172, .28);
+            border-color: #86efac
+        }
+
+        .sl {
+            background: rgba(253, 186, 116, .3);
+            border-color: #fdba74
+        }
+
+        .lk {
+            background: rgba(253, 230, 138, .28);
+            border-color: #fde68a
+        }
+
+        .s {
+            font-size: 30px;
+            font-weight: 700;
+            margin-top: 2px
+        }
+
+        .tab.on {
+            background: #fff;
+            color: #2d2a6e;
+            border-color: #fff
+        }
+
+        .tab.off {
+            opacity: .75;
+            border-style: dashed
+        }
+
+        .tw {
+            overflow-x: auto
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        td,
+        th {
+            padding: 10px;
+            font-size: 13px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, .2);
+            white-space: nowrap
+        }
+
+        th {
+            font-weight: 500;
+            color: rgba(255, 255, 255, .88);
+            position: sticky;
+            top: 0
+        }
+
+        .b2 {
+            border-radius: 8px;
+            padding: 2px 10px;
+            font-weight: 600;
+            border: 1px solid
+        }
+
+        .a {
+            background: rgba(74, 222, 128, .3);
+            border-color: #bbf7d0
+        }
+
+        .r {
+            background: rgba(248, 113, 113, .34);
+            border-color: #fecaca
+        }
+
+        .e {
+            background: rgba(251, 191, 36, .34);
+            border-color: #fde68a
+        }
+
+        .lw {
+            max-height: 420px;
+            overflow: auto
+        }
+
+        .gw {
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, .28);
+            border-radius: 14px;
+            overflow: hidden;
+            background: rgba(15, 18, 60, .3);
+            min-height: 260px
+        }
+
+        .gf {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 10px;
+            padding: 10px
+        }
+
+        .gw iframe {
+            width: 100%;
+            border: 0;
+            display: block;
+            background: #111
+        }
+
+        .ov {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: rgba(30, 30, 90, .55);
+            text-align: center;
+            padding: 20px;
+            z-index: 2
+        }
+
+        .hide {
+            display: none !important
+        }
+
+        .spin {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, .3);
+            border-top-color: #fff;
+            animation: sp 1s linear infinite
+        }
+
+        @keyframes sp {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .lg {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, .1);
+            font-size: 12px
+        }
+
+        .bn {
+            background: rgba(251, 191, 36, .25);
+            border: 1px solid #fde68a;
+            border-radius: 14px;
+            padding: 14px 18px;
+            font-size: 13px;
+            line-height: 1.6
+        }
+
+        @media(max-width:640px) {
+            .wrap {
+                padding: 12px
+            }
+
+            .g {
+                padding: 16px
+            }
+
+            .s {
+                font-size: 24px
+            }
+        }
+    </style>
 </head>
+
 <body>
-<div class="wrap">
+    <div class="wrap">
 
-<header class="g c1" style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:16px 22px">
-<div style="display:flex;align-items:center;gap:14px">
-<div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#8b8cf8,#c084fc);display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 17a8 8 0 0 1 16 0"/><path d="M12 17l4-6"/></svg></div>
-<div><div style="font-size:24px;font-weight:700">RateLimitX</div><div class="sub" style="margin:0"><em>Distributed Rate Limiter</em></div></div>
-</div>
-<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-<span class="pill" id="status" aria-live="polite"><span class="d"></span>Checking system…</span>
-<span class="pill">Go</span><span class="pill">Redis</span><span class="pill">Prometheus</span><span class="pill">Grafana</span>
-</div>
-</header>
+        <header class="g c1"
+            style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:16px 22px">
+            <div style="display:flex;align-items:center;gap:14px">
+                <div
+                    style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#8b8cf8,#c084fc);display:flex;align-items:center;justify-content:center">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"
+                        stroke-linecap="round" aria-hidden="true">
+                        <path d="M4 17a8 8 0 0 1 16 0" />
+                        <path d="M12 17l4-6" />
+                    </svg></div>
+                <div>
+                    <div style="font-size:24px;font-weight:700">RateLimitX</div>
+                    <div class="sub" style="margin:0"><em>Distributed Rate Limiter</em></div>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <span class="pill" id="status" aria-live="polite"><span class="d"></span>Checking system…</span>
+                <span class="pill">Go</span><span class="pill">Redis</span><span class="pill">Prometheus</span><span
+                    class="pill">Grafana</span>
+            </div>
+        </header>
 
-<div class="bn hide" id="banner" role="alert"></div>
+        <div class="bn hide" id="banner" role="alert"></div>
 
-<section class="grid" style="grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:18px">
-<div class="g c1" style="grid-column:span 2">
-<h2>Testing playground</h2><div class="sub" style="margin-bottom:16px">Pick an API key. Its algorithm and tier come from your Policy Manager.</div>
-<div class="keys" id="keys" role="radiogroup" aria-label="API key"></div>
-<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:16px">
-<div><label for="count">Requests to simulate</label><input id="count" type="number" min="1" max="1000" value="100"></div>
-<div><label for="delay">Delay between requests (ms)</label><input id="delay" type="number" min="0" max="5000" value="50"></div>
-<div><label for="conc">Concurrency</label><select id="conc"><option value="1">1 (sequential)</option><option value="2">2</option><option value="4">4</option></select></div>
-</div>
-<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-<button id="b1">Send 1 request</button><button id="b10">Send 10 requests</button><button id="b50">Send 50 requests</button>
-<button class="go" id="start">Start simulation</button><button class="stop" id="stop" disabled>Stop simulation</button><button id="clear">Clear logs</button>
-<span class="sub" id="prog" aria-live="polite"></span>
-</div>
-<div class="sub" id="err" style="margin-top:8px;color:#fde68a"></div>
-</div>
-<div class="g c2">
-<h2>Selected policy</h2><div class="sub" style="margin-bottom:10px">Updates automatically with the key</div>
-<div class="row"><span>API key</span><span id="pKey"></span></div>
-<div class="row"><span>Algorithm</span><span id="pAlg"></span></div>
-<div class="row"><span>Tier</span><span id="pTier"></span></div>
-<div class="row"><span>Header sent</span><span>X-API-Key</span></div>
-<div class="row"><span>Rate limit</span><span id="pLim" title="Loaded from X-RateLimit-Limit after the first API request">shown after first API request(30req/min)</span></div>
-</div>
-</section>
+        <section class="grid" style="grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:18px">
+            <div class="g c1" style="grid-column:span 2">
+                <h2>Testing playground</h2>
+                <div class="sub" style="margin-bottom:16px">Pick an API key. Its algorithm and tier come from your
+                    Policy Manager.</div>
+                <div class="keys" id="keys" role="radiogroup" aria-label="API key"></div>
+                <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:16px">
+                    <div><label for="count">Requests to simulate</label><input id="count" type="number" min="1"
+                            max="1000" value="100"></div>
+                    <div><label for="delay">Delay between requests (ms)</label><input id="delay" type="number" min="0"
+                            max="5000" value="50"></div>
+                    <div><label for="conc">Concurrency</label><select id="conc">
+                            <option value="1">1 (sequential)</option>
+                            <option value="2">2</option>
+                            <option value="4">4</option>
+                        </select></div>
+                </div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+                    <button id="b1">Send 1 request</button><button id="b10">Send 10 requests</button><button
+                        id="b50">Send 50 requests</button>
+                    <button class="go" id="start">Start simulation</button><button class="stop" id="stop" disabled>Stop
+                        simulation</button><button id="clear">Clear logs</button>
+                    <span class="sub" id="prog" aria-live="polite"></span>
+                </div>
+                <div class="sub" id="err" style="margin-top:8px;color:#fde68a"></div>
+            </div>
+            <div class="g c2">
+                <h2>Selected policy</h2>
+                <div class="sub" style="margin-bottom:10px">Updates automatically with the key</div>
+                <div class="row"><span>API key</span><span id="pKey"></span></div>
+                <div class="row"><span>Algorithm</span><span id="pAlg"></span></div>
+                <div class="row"><span>Tier</span><span id="pTier"></span></div>
+                <div class="row"><span>Header sent</span><span>X-API-Key</span></div>
+                <div class="row"><span>Rate limit</span><span id="pLim"
+                        title="Loaded from X-RateLimit-Limit after the first API request">shown after first API
+                        request(30req/min)</span></div>
+            </div>
+        </section>
 
-<section class="grid" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px" aria-label="Live statistics">
-<div class="g c1" style="padding:18px"><div class="sub" style="margin:0">Total requests</div><div class="s" id="sTotal">0</div><div class="sub" id="sErr" style="margin:0"></div></div>
-<div class="g c3" style="padding:18px"><div class="sub" style="margin:0">Allowed requests</div><div class="s" id="sOk" style="color:#bbf7d0">0</div></div>
-<div class="g c4" style="padding:18px"><div class="sub" style="margin:0">Rejected requests (429)</div><div class="s" id="sRej" style="color:#fecaca">0</div></div>
-<div class="g c2" style="padding:18px"><div class="sub" style="margin:0">Average latency</div><div class="s" id="sAvg">-</div></div>
-<div class="g c6" style="padding:18px"><div class="sub" style="margin:0">p95 latency</div><div class="s" id="sP95">-</div></div>
-</section>
+        <section class="grid" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px"
+            aria-label="Live statistics">
+            <div class="g c1" style="padding:18px">
+                <div class="sub" style="margin:0">Total requests</div>
+                <div class="s" id="sTotal">0</div>
+                <div class="sub" id="sErr" style="margin:0"></div>
+            </div>
+            <div class="g c3" style="padding:18px">
+                <div class="sub" style="margin:0">Allowed requests</div>
+                <div class="s" id="sOk" style="color:#bbf7d0">0</div>
+            </div>
+            <div class="g c4" style="padding:18px">
+                <div class="sub" style="margin:0">Rejected requests (429)</div>
+                <div class="s" id="sRej" style="color:#fecaca">0</div>
+            </div>
+            <div class="g c2" style="padding:18px">
+                <div class="sub" style="margin:0">Average latency</div>
+                <div class="s" id="sAvg">-</div>
+            </div>
+            <div class="g c6" style="padding:18px">
+                <div class="sub" style="margin:0">p95 latency</div>
+                <div class="s" id="sP95">-</div>
+            </div>
+        </section>
 
-<section class="g c6">
-<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
-<div><h2>Grafana monitoring and analytics</h2><div class="sub">Dashboard <code>ratelimitx-overview</code> from your provisioning files</div></div>
-<div style="display:flex;gap:8px;flex-wrap:wrap" id="tabs" role="tablist"></div>
-</div>
-<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:12px">
-<div style="width:150px"><label for="range">Time range</label><select id="range"><option value="15m">Last 15 minutes</option><option value="1h" selected>Last 1 hour</option><option value="6h">Last 6 hours</option><option value="24h">Last 24 hours</option></select></div>
-<div style="width:150px"><label for="refresh">Refresh</label><select id="refresh"><option value="off">Off</option><option value="5s" selected>Every 5s</option><option value="10s">Every 10s</option><option value="30s">Every 30s</option></select></div>
-<button id="gfull">Full screen</button><button id="gopen">Open in Grafana</button>
-</div>
-<div class="gw" id="gw">
-<div class="ov hide" id="gov"><div class="spin" id="gspin"></div><div id="gmsg"></div></div>
-<div id="gframes"></div>
-</div>
-<div class="sub" style="margin-top:10px">If a frame stays blank, Grafana is refusing to be embedded or is asking you to sign in. Use Open in Grafana.</div>
-</section>
+        <section class="g c6">
+            <div
+                style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+                <div>
+                    <h2>Grafana monitoring and analytics</h2>
+                    <div class="sub">Dashboard <code>ratelimitx-overview</code> from your provisioning files</div>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap" id="tabs" role="tablist"></div>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:12px">
+                <div style="width:150px"><label for="range">Time range</label><select id="range">
+                        <option value="15m">Last 15 minutes</option>
+                        <option value="1h" selected>Last 1 hour</option>
+                        <option value="6h">Last 6 hours</option>
+                        <option value="24h">Last 24 hours</option>
+                    </select></div>
+                <div style="width:150px"><label for="refresh">Refresh</label><select id="refresh">
+                        <option value="off">Off</option>
+                        <option value="5s" selected>Every 5s</option>
+                        <option value="10s">Every 10s</option>
+                        <option value="30s">Every 30s</option>
+                    </select></div>
+                <button id="gfull">Full screen</button><button id="gopen">Open in Grafana</button>
+            </div>
+            <div class="gw" id="gw">
+                <div class="ov hide" id="gov">
+                    <div class="spin" id="gspin"></div>
+                    <div id="gmsg"></div>
+                </div>
+                <div id="gframes"></div>
+            </div>
+            <div class="sub" style="margin-top:10px">If a frame stays blank, Grafana is refusing to be embedded or is
+                asking you to sign in. Use Open in Grafana.</div>
+        </section>
 
-<section class="g c7">
-<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px"><h2>Recent request logs</h2><span class="sub" id="lcount" style="margin:0"></span></div>
-<div class="tw lw"><table>
-<thead><tr><th>Request #</th><th>Timestamp</th><th>API key / tier</th><th>Algorithm</th><th>HTTP status</th><th>Response time</th><th>Remaining</th><th>Retry-After</th></tr></thead>
-<tbody id="logs"></tbody></table>
-<div class="sub" id="lempty" style="padding:16px 4px">No requests yet. Send one from the playground.</div></div>
-</section>
+        <section class="g c7">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px">
+                <h2>Recent request logs</h2><span class="sub" id="lcount" style="margin:0"></span>
+            </div>
+            <div class="tw lw">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Request #</th>
+                            <th>Timestamp</th>
+                            <th>API key / tier</th>
+                            <th>Algorithm</th>
+                            <th>HTTP status</th>
+                            <th>Response time</th>
+                            <th>Remaining</th>
+                            <th>Retry-After</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs"></tbody>
+                </table>
+                <div class="sub" id="lempty" style="padding:16px 4px">No requests yet. Send one from the playground.
+                </div>
+            </div>
+        </section>
 
-<section class="grid" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px">
-<div class="g c3"><h2 style="margin-bottom:6px">System information</h2>
-<div class="row"><span>API service</span><span id="iNginx"></span></div>
-<div class="row"><span>Instances seen (from response body)</span><span id="iInst">none yet</span></div>
-<div class="row"><span>Redis (inferred from API replies)</span><span id="iRedis"><span class="d"></span>unknown yet</span></div>
-<div class="row"><span>Prometheus</span><span id="iProm"><span class="d"></span>Checking</span></div>
-<div class="row"><span>Grafana</span><span id="iGraf"><span class="d"></span>Checking</span></div>
-</div>
-<div class="g c5"><h2 style="margin-bottom:10px">Quick tips</h2>
-<ul style="margin:0;padding-left:18px;line-height:1.9;font-size:14px"><li>Test each algorithm with its mapped API key.</li><li>Increase request volume to see rate limiting.</li><li>Compare p95 and p99 latency in Grafana.</li><li>Watch requests spread across both Go instances.</li><li>Inspect Retry-After and rate limit headers.</li></ul></div>
-</section>
-</div>
+        <section class="grid" style="grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px">
+            <div class="g c3">
+                <h2 style="margin-bottom:6px">System information</h2>
+                <div class="row"><span>API service</span><span id="iNginx"></span></div>
+                <div class="row"><span>Instances seen (from response body)</span><span id="iInst">none yet</span></div>
+                <div class="row"><span>Redis (inferred from API replies)</span><span id="iRedis"><span
+                            class="d"></span>unknown yet</span></div>
+                <div class="row"><span>Prometheus</span><span id="iProm"><span class="d"></span>Checking</span></div>
+                <div class="row"><span>Grafana</span><span id="iGraf"><span class="d"></span>Checking</span></div>
+            </div>
+            <div class="g c5">
+                <h2 style="margin-bottom:10px">Quick tips</h2>
+                <ul style="margin:0;padding-left:18px;line-height:1.9;font-size:14px">
+                    <li>Test each algorithm with its mapped API key.</li>
+                    <li>Increase request volume to see rate limiting.</li>
+                    <li>Compare p95 and p99 latency in Grafana.</li>
+                    <li>Watch requests spread across both Go instances.</li>
+                    <li>Inspect Retry-After and rate limit headers.</li>
+                </ul>
+            </div>
+        </section>
+    </div>
 
-<script>
-'use strict';
-/* ---------- Configuration taken from the repository ---------- */
-// Display labels are professional names; the real key (sent in X-API-Key) must match the Go Policy Manager.
-const KEYS=[
- {key:'nandini-free',label:'alice-free',alg:'fixed_window',tier:'free',cls:'fw'},
- {key:'nandini-pro',label:'alice-pro',alg:'token_bucket',tier:'pro',cls:'tb'},
- {key:'nandini-enterprise',label:'alice-enterprise',alg:'sliding_window_counter',tier:'enterprise',cls:'sc'},
- {key:'nandini-log',label:'alice-log',alg:'sliding_window_log',tier:'custom',cls:'sl'},
- {key:'nandini-leaky',label:'alice-leaky',alg:'leaky_bucket',tier:'custom',cls:'lk'}];
-const UID='ratelimitx-overview';           // only dashboard provisioned in the repo
-const TABS=[{name:'Overview',panels:null},
- {name:'Algorithm performance',panels:[3,4,8,10]},
- {name:'Latency analysis',panels:[5,6,7]},
- {name:'Traffic and rejections',panels:[1,2,9,8]},
- {name:'Redis monitoring',none:true}];       // no Redis dashboard exists in the repo
-const HOST=(location.hostname||'localhost'), GRAF='http://'+HOST+':3000', PROM='http://'+HOST+':9090';
-const API_PATH='/api/test';
+    <script>
+        'use strict';
+        /* ---------- Configuration taken from the repository ---------- */
+        // Display labels are professional names; the real key (sent in X-API-Key) must match the Go Policy Manager.
+        const KEYS = [
+            { key: 'nandini-free', label: 'alice-free', alg: 'fixed_window', tier: 'free', cls: 'fw' },
+            { key: 'nandini-pro', label: 'alice-pro', alg: 'token_bucket', tier: 'pro', cls: 'tb' },
+            { key: 'nandini-enterprise', label: 'alice-enterprise', alg: 'sliding_window_counter', tier: 'enterprise', cls: 'sc' },
+            { key: 'nandini-log', label: 'alice-log', alg: 'sliding_window_log', tier: 'custom', cls: 'sl' },
+            { key: 'nandini-leaky', label: 'alice-leaky', alg: 'leaky_bucket', tier: 'custom', cls: 'lk' }];
+        const UID = 'ratelimitx-overview';           // only dashboard provisioned in the repo
+        const TABS = [{ name: 'Overview', panels: null },
+        { name: 'Algorithm performance', panels: [3, 4, 8, 10] },
+        { name: 'Latency analysis', panels: [5, 6, 7] },
+        { name: 'Traffic and rejections', panels: [1, 2, 9, 8] },
+        { name: 'Redis monitoring', none: true }];       // no Redis dashboard exists in the repo
+        const HOST = (location.hostname || 'localhost'),
+            GRAF = 'http://grafana.' + HOST + ':32065',
+            PROM = 'http://prometheus.' + HOST + ':32065'; const API_PATH = '/api/test';
 
-const $=id=>document.getElementById(id);
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-let sel=1,running=false,stopFlag=false,seq=0,tab=0;
-const st={total:0,ok:0,rej:0,err:0,lat:[]},inst={};
+        const $ = id => document.getElementById(id);
+        const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        let sel = 1, running = false, stopFlag = false, seq = 0, tab = 0;
+        const st = { total: 0, ok: 0, rej: 0, err: 0, lat: [] }, inst = {};
 
-/* ---------- API communication ---------- */
-async function sendOne(){
- const k=KEYS[sel],t0=performance.now(),ac=new AbortController(),to=setTimeout(()=>ac.abort(),8000);
- const r={n:++seq,time:new Date(),k,status:0,label:'',ms:0,rem:'n/a',retry:'-',limit:null,inst:null};
- try{
-  const res=await fetch(API_PATH,{headers:{'X-API-Key':k.key},cache:'no-store',signal:ac.signal});
-  r.ms=performance.now()-t0;r.status=res.status;
-  const h=n=>res.headers.get(n);
-  r.rem=h('X-RateLimit-Remaining')??'n/a';r.limit=h('X-RateLimit-Limit');
-  r.retry=res.status===429?(h('Retry-After')?h('Retry-After')+' s':'n/a'):'-';
-  const body=await res.text();const m=/handled by (\S+)/i.exec(body);if(m)r.inst=m[1];
- }catch(e){
-  r.label=e.name==='AbortError'?'TIMEOUT':'NETWORK';
- }finally{clearTimeout(to)}
- return r;
-}
+        /* ---------- API communication ---------- */
+        async function sendOne() {
+            const k = KEYS[sel], t0 = performance.now(), ac = new AbortController(), to = setTimeout(() => ac.abort(), 8000);
+            const r = { n: ++seq, time: new Date(), k, status: 0, label: '', ms: 0, rem: 'n/a', retry: '-', limit: null, inst: null };
+            try {
+                const res = await fetch(API_PATH, { headers: { 'X-API-Key': k.key }, cache: 'no-store', signal: ac.signal });
+                r.ms = performance.now() - t0; r.status = res.status;
+                const h = n => res.headers.get(n);
+                r.rem = h('X-RateLimit-Remaining') ?? 'n/a'; r.limit = h('X-RateLimit-Limit');
+                r.retry = res.status === 429 ? (h('Retry-After') ? h('Retry-After') + ' s' : 'n/a') : '-';
+                const body = await res.text(); const m = /handled by (\S+)/i.exec(body); if (m) r.inst = m[1];
+            } catch (e) {
+                r.label = e.name === 'AbortError' ? 'TIMEOUT' : 'NETWORK';
+            } finally { clearTimeout(to) }
+            return r;
+        }
 
-/* ---------- Simulation control ---------- */
-async function run(n){
- if(running)return;
- $('err').textContent='';
- const delay=Math.min(5000,Math.max(0,+$('delay').value||0)),conc=Math.min(+$('conc').value,n);
- running=true;stopFlag=false;busy(true);let issued=0,done=0;
- const worker=async()=>{while(!stopFlag&&issued<n){issued++;record(await sendOne());done++;$('prog').textContent=`Sent ${done} of ${n}`;if(delay&&!stopFlag&&issued<n)await sleep(delay)}};
- await Promise.all(Array.from({length:conc},worker));
- running=false;busy(false);$('prog').textContent=(stopFlag?'Stopped after ':'Finished: ')+done+' request'+(done===1?'':'s');
-}
-function busy(b){['b1','b10','b50','start'].forEach(i=>$(i).disabled=b);$('stop').disabled=!b;$('keys').querySelectorAll('button').forEach(x=>x.disabled=b);['count','conc'].forEach(i=>$(i).disabled=b)}
+        /* ---------- Simulation control ---------- */
+        async function run(n) {
+            if (running) return;
+            $('err').textContent = '';
+            const delay = Math.min(5000, Math.max(0, +$('delay').value || 0)), conc = Math.min(+$('conc').value, n);
+            running = true; stopFlag = false; busy(true); let issued = 0, done = 0;
+            const worker = async () => { while (!stopFlag && issued < n) { issued++; record(await sendOne()); done++; $('prog').textContent = `Sent ${done} of ${n}`; if (delay && !stopFlag && issued < n) await sleep(delay) } };
+            await Promise.all(Array.from({ length: conc }, worker));
+            running = false; busy(false); $('prog').textContent = (stopFlag ? 'Stopped after ' : 'Finished: ') + done + ' request' + (done === 1 ? '' : 's');
+        }
+        function busy(b) { ['b1', 'b10', 'b50', 'start'].forEach(i => $(i).disabled = b); $('stop').disabled = !b; $('keys').querySelectorAll('button').forEach(x => x.disabled = b);['count', 'conc'].forEach(i => $(i).disabled = b) }
 
-/* ---------- Recording results, statistics and logs ---------- */
-function record(r){
- const s=r.status;
- st.total++;if(s>=200&&s<300)st.ok++;else if(s===429)st.rej++;else st.err++;
- if(s>0)st.lat.push(r.ms);
- if(r.limit)$('pLim').textContent=r.limit+' per minute';
- if(r.inst){inst[r.inst]=(inst[r.inst]||0)+1;$('iInst').textContent=Object.entries(inst).map(([k,v])=>k+': '+v).join(' · ')}
- redis(s);
- if(r.label==='NETWORK'||s===404||s===405)banner();
- const cls=s>=200&&s<300?'a':s===429?'r':'e',txt=s?s:r.label;
- const t=r.time,ts=[t.getHours(),t.getMinutes(),t.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':')+'.'+String(t.getMilliseconds()).padStart(3,'0');
- const tr=document.createElement('tr');
- tr.innerHTML=`<td>${r.n}</td><td>${ts}</td><td>${esc(r.k.label)} / ${esc(r.k.tier)}</td><td><span class="al ${r.k.cls}">${r.k.alg}</span></td><td><span class="b2 ${cls}">${esc(txt)}</span></td><td>${s?r.ms.toFixed(1)+' ms':'-'}</td><td>${esc(r.rem)}</td><td>${esc(r.retry)}</td>`;
- $('logs').prepend(tr);while($('logs').children.length>200)$('logs').lastChild.remove();
- $('lempty').classList.add('hide');stats();
-}
-function stats(){
- $('sTotal').textContent=st.total;$('sOk').textContent=st.ok;$('sRej').textContent=st.rej;
- $('sErr').textContent=st.err?st.err+' failed (network or 5xx)':'';
- const l=[...st.lat].sort((a,b)=>a-b);
- $('sAvg').textContent=l.length?(l.reduce((a,b)=>a+b,0)/l.length).toFixed(1)+' ms':'-';
- $('sP95').textContent=l.length?l[Math.ceil(0.95*l.length)-1].toFixed(1)+' ms':'-';
- $('lcount').textContent=Math.min(200,$('logs').children.length)+' shown';
-}
-function clearAll(){
- if(running)return;
- $('logs').innerHTML='';$('lempty').classList.remove('hide');
- Object.assign(st,{total:0,ok:0,rej:0,err:0,lat:[]});for(const k in inst)delete inst[k];
- $('iInst').textContent='none yet';$('prog').textContent='';$('err').textContent='';stats();
-}
-function redis(s){
- const el=$('iRedis');
- if(s===200||s===429)el.innerHTML='<span class="d ok"></span>limiter responding';
- else if(s===503)el.innerHTML='<span class="d bad"></span>limiter unavailable (503)';
-}
-function banner(){
- const b=$('banner');b.classList.remove('hide');
- b.innerHTML='<strong>The page cannot reach the API.</strong> Check that the RateLimitX service is running and reload the page.';
-}
+        /* ---------- Recording results, statistics and logs ---------- */
+        function record(r) {
+            const s = r.status;
+            st.total++; if (s >= 200 && s < 300) st.ok++; else if (s === 429) st.rej++; else st.err++;
+            if (s > 0) st.lat.push(r.ms);
+            if (r.limit) $('pLim').textContent = r.limit + ' per minute';
+            if (r.inst) { inst[r.inst] = (inst[r.inst] || 0) + 1; $('iInst').textContent = Object.entries(inst).map(([k, v]) => k + ': ' + v).join(' · ') }
+            redis(s);
+            if (r.label === 'NETWORK' || s === 404 || s === 405) banner();
+            const cls = s >= 200 && s < 300 ? 'a' : s === 429 ? 'r' : 'e', txt = s ? s : r.label;
+            const t = r.time, ts = [t.getHours(), t.getMinutes(), t.getSeconds()].map(x => String(x).padStart(2, '0')).join(':') + '.' + String(t.getMilliseconds()).padStart(3, '0');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${r.n}</td><td>${ts}</td><td>${esc(r.k.label)} / ${esc(r.k.tier)}</td><td><span class="al ${r.k.cls}">${r.k.alg}</span></td><td><span class="b2 ${cls}">${esc(txt)}</span></td><td>${s ? r.ms.toFixed(1) + ' ms' : '-'}</td><td>${esc(r.rem)}</td><td>${esc(r.retry)}</td>`;
+            $('logs').prepend(tr); while ($('logs').children.length > 200) $('logs').lastChild.remove();
+            $('lempty').classList.add('hide'); stats();
+        }
+        function stats() {
+            $('sTotal').textContent = st.total; $('sOk').textContent = st.ok; $('sRej').textContent = st.rej;
+            $('sErr').textContent = st.err ? st.err + ' failed (network or 5xx)' : '';
+            const l = [...st.lat].sort((a, b) => a - b);
+            $('sAvg').textContent = l.length ? (l.reduce((a, b) => a + b, 0) / l.length).toFixed(1) + ' ms' : '-';
+            $('sP95').textContent = l.length ? l[Math.ceil(0.95 * l.length) - 1].toFixed(1) + ' ms' : '-';
+            $('lcount').textContent = Math.min(200, $('logs').children.length) + ' shown';
+        }
+        function clearAll() {
+            if (running) return;
+            $('logs').innerHTML = ''; $('lempty').classList.remove('hide');
+            Object.assign(st, { total: 0, ok: 0, rej: 0, err: 0, lat: [] }); for (const k in inst) delete inst[k];
+            $('iInst').textContent = 'none yet'; $('prog').textContent = ''; $('err').textContent = ''; stats();
+        }
+        function redis(s) {
+            const el = $('iRedis');
+            if (s === 200 || s === 429) el.innerHTML = '<span class="d ok"></span>limiter responding';
+            else if (s === 503) el.innerHTML = '<span class="d bad"></span>limiter unavailable (503)';
+        }
+        function banner() {
+            const b = $('banner'); b.classList.remove('hide');
+            b.innerHTML = '<strong>The page cannot reach the API.</strong> Check that the RateLimitX service is running and reload the page.';
+        }
 
-/* ---------- Health checks (reachability only for other origins) ---------- */
-async function probe(url){
- const ac=new AbortController(),t=setTimeout(()=>ac.abort(),4000);
- try{await fetch(url,{mode:'no-cors',cache:'no-store',signal:ac.signal});return true}catch(e){return false}finally{clearTimeout(t)}
-}
-function dot(el,c,t){el.innerHTML='<span class="d '+c+'"></span>'+t}
-async function health(){
- let res='down';
- try{const ac=new AbortController(),t=setTimeout(()=>ac.abort(),4000);
-  const r=await fetch('/health',{cache:'no-store',signal:ac.signal});clearTimeout(t);
-  res=r.ok&&/healthy/i.test(await r.text())?'ok':'bad';
- }catch(e){res=(await probe('/health'))?'limited':'down'}
- const map={ok:['ok','System online'],limited:['warn','Reachable (health not readable)'],bad:['bad','Unhealthy'],down:['bad','Offline']};
- dot($('status'),map[res][0],map[res][1]);dot($('iNginx'),map[res][0],res==='ok'?'Active':'Inactive');
- const p=await probe(PROM+'/-/healthy');dot($('iProm'),p?'ok':'bad',p?'Active':'Inactive');
- const g=await probe(GRAF+'/api/health');dot($('iGraf'),g?'ok':'bad',g?'Active':'Inactive');
- return g;
-}
+        /* ---------- Health checks (reachability only for other origins) ---------- */
+        async function probe(url) {
+            const ac = new AbortController(), t = setTimeout(() => ac.abort(), 4000);
+            try { await fetch(url, { mode: 'no-cors', cache: 'no-store', signal: ac.signal }); return true } catch (e) { return false } finally { clearTimeout(t) }
+        }
+        function dot(el, c, t) { el.innerHTML = '<span class="d ' + c + '"></span>' + t }
+        async function health() {
+            let res = 'down';
+            try {
+                const ac = new AbortController(), t = setTimeout(() => ac.abort(), 4000);
+                const r = await fetch('/health', { cache: 'no-store', signal: ac.signal }); clearTimeout(t);
+                res = r.ok && /healthy/i.test(await r.text()) ? 'ok' : 'bad';
+            } catch (e) { res = (await probe('/health')) ? 'limited' : 'down' }
+            const map = { ok: ['ok', 'System online'], limited: ['warn', 'Reachable (health not readable)'], bad: ['bad', 'Unhealthy'], down: ['bad', 'Offline'] };
+            dot($('status'), map[res][0], map[res][1]); dot($('iNginx'), map[res][0], res === 'ok' ? 'Active' : 'Inactive');
+            const p = await probe(PROM + '/-/healthy'); dot($('iProm'), p ? 'ok' : 'bad', p ? 'Active' : 'Inactive');
+            const g = await probe(GRAF + '/api/health'); dot($('iGraf'), g ? 'ok' : 'bad', g ? 'Active' : 'Inactive');
+            return g;
+        }
 
-/* ---------- Grafana embedding ---------- */
-const qs=()=>'orgId=1&from=now-'+$('range').value+'&to=now'+($('refresh').value==='off'?'':'&refresh='+$('refresh').value);
-function drawTabs(){
- $('tabs').innerHTML='';
- TABS.forEach((t,i)=>{const b=document.createElement('button');b.textContent=t.name;b.className='tab'+(i===tab?' on':'')+(t.none?' off':'');b.setAttribute('role','tab');b.setAttribute('aria-selected',i===tab);b.onclick=()=>{tab=i;drawTabs();loadGrafana()};$('tabs').appendChild(b)});
-}
-function overlay(spin,msg){$('gov').classList.toggle('hide',!msg&&!spin);$('gspin').classList.toggle('hide',!spin);$('gmsg').innerHTML=msg||'Loading Grafana…'}
-async function loadGrafana(){
- const t=TABS[tab],box=$('gframes');box.innerHTML='';
- if(t.none){overlay(false,'No Redis dashboard is provisioned in this repository, so nothing is linked here. Add a dashboard with its own UID to enable this tab.');return}
- overlay(true);
- if(!(await probe(GRAF+'/api/health'))){overlay(false,'Grafana is inactive. Check that the monitoring services are running.');return}
- const urls=t.panels?t.panels.map(id=>GRAF+'/d-solo/'+UID+'/?'+qs()+'&panelId='+id+'&theme=dark'):[GRAF+'/d/'+UID+'?'+qs()+'&kiosk'];
- let loaded=0;
- box.className=t.panels?'gf':'';
- urls.forEach(u=>{const f=document.createElement('iframe');f.src=u;f.title='Grafana dashboard';f.style.height=t.panels?'300px':'760px';f.onload=()=>{if(++loaded===urls.length)overlay(false,'')};box.appendChild(f)});
- setTimeout(()=>{if(loaded<urls.length)overlay(false,'Still waiting for Grafana. If the frame stays blank, Grafana is blocking embedding or needs a sign in. <br>Use Open in Grafana.')},12000);
-}
-function openGrafana(){const t=TABS[tab];window.open(GRAF+'/d/'+UID+'?'+qs()+(t.panels&&t.panels.length===1?'&viewPanel='+t.panels[0]:''),'_blank','noopener')}
+        /* ---------- Grafana embedding ---------- */
+        const qs = () => 'orgId=1&from=now-' + $('range').value + '&to=now' + ($('refresh').value === 'off' ? '' : '&refresh=' + $('refresh').value);
+        function drawTabs() {
+            $('tabs').innerHTML = '';
+            TABS.forEach((t, i) => { const b = document.createElement('button'); b.textContent = t.name; b.className = 'tab' + (i === tab ? ' on' : '') + (t.none ? ' off' : ''); b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', i === tab); b.onclick = () => { tab = i; drawTabs(); loadGrafana() }; $('tabs').appendChild(b) });
+        }
+        function overlay(spin, msg) { $('gov').classList.toggle('hide', !msg && !spin); $('gspin').classList.toggle('hide', !spin); $('gmsg').innerHTML = msg || 'Loading Grafana…' }
+        async function loadGrafana() {
+            const t = TABS[tab], box = $('gframes'); box.innerHTML = '';
+            if (t.none) { overlay(false, 'No Redis dashboard is provisioned in this repository, so nothing is linked here. Add a dashboard with its own UID to enable this tab.'); return }
+            overlay(true);
+            if (!(await probe(GRAF + '/api/health'))) { overlay(false, 'Grafana is inactive. Check that the monitoring services are running.'); return }
+            const urls = t.panels ? t.panels.map(id => GRAF + '/d-solo/' + UID + '/?' + qs() + '&panelId=' + id + '&theme=dark') : [GRAF + '/d/' + UID + '?' + qs() + '&kiosk'];
+            let loaded = 0;
+            box.className = t.panels ? 'gf' : '';
+            urls.forEach(u => { const f = document.createElement('iframe'); f.src = u; f.title = 'Grafana dashboard'; f.style.height = t.panels ? '300px' : '760px'; f.onload = () => { if (++loaded === urls.length) overlay(false, '') }; box.appendChild(f) });
+            setTimeout(() => { if (loaded < urls.length) overlay(false, 'Still waiting for Grafana. If the frame stays blank, Grafana is blocking embedding or needs a sign in. <br>Use Open in Grafana.') }, 12000);
+        }
+        function openGrafana() { const t = TABS[tab]; window.open(GRAF + '/d/' + UID + '?' + qs() + (t.panels && t.panels.length === 1 ? '&viewPanel=' + t.panels[0] : ''), '_blank', 'noopener') }
 
-/* ---------- Wiring ---------- */
-function drawKeys(){
- $('keys').innerHTML='';
- KEYS.forEach((k,i)=>{const b=document.createElement('button');b.className='k'+(i===sel?' on':'');b.setAttribute('role','radio');b.setAttribute('aria-checked',i===sel);
-  b.innerHTML=`<span>${esc(k.label)}</span><span class="tg">${k.alg} · ${k.tier}</span>`;b.onclick=()=>{sel=i;drawKeys()};$('keys').appendChild(b)});
- const k=KEYS[sel];$('pKey').textContent=k.label;$('pAlg').innerHTML='<span class="al '+k.cls+'">'+k.alg+'</span>';$('pTier').textContent=k.tier;
-}
-$('b1').onclick=()=>run(1);$('b10').onclick=()=>run(10);$('b50').onclick=()=>run(50);
-$('start').onclick=()=>run(Math.min(1000,Math.max(1,parseInt($('count').value,10)||1)));
-$('stop').onclick=()=>{stopFlag=true;$('prog').textContent='Stopping…'};
-$('clear').onclick=clearAll;
-$('range').onchange=$('refresh').onchange=loadGrafana;$('gopen').onclick=openGrafana;
-$('gfull').onclick=()=>{const e=$('gw');(e.requestFullscreen?e.requestFullscreen():Promise.reject()).catch(()=>openGrafana())};
-drawKeys();drawTabs();stats();health().then(()=>loadGrafana());setInterval(health,15000);
-</script>
+        /* ---------- Wiring ---------- */
+        function drawKeys() {
+            $('keys').innerHTML = '';
+            KEYS.forEach((k, i) => {
+                const b = document.createElement('button'); b.className = 'k' + (i === sel ? ' on' : ''); b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', i === sel);
+                b.innerHTML = `<span>${esc(k.label)}</span><span class="tg">${k.alg} · ${k.tier}</span>`; b.onclick = () => { sel = i; drawKeys() }; $('keys').appendChild(b)
+            });
+            const k = KEYS[sel]; $('pKey').textContent = k.label; $('pAlg').innerHTML = '<span class="al ' + k.cls + '">' + k.alg + '</span>'; $('pTier').textContent = k.tier;
+        }
+        $('b1').onclick = () => run(1); $('b10').onclick = () => run(10); $('b50').onclick = () => run(50);
+        $('start').onclick = () => run(Math.min(1000, Math.max(1, parseInt($('count').value, 10) || 1)));
+        $('stop').onclick = () => { stopFlag = true; $('prog').textContent = 'Stopping…' };
+        $('clear').onclick = clearAll;
+        $('range').onchange = $('refresh').onchange = loadGrafana; $('gopen').onclick = openGrafana;
+        $('gfull').onclick = () => { const e = $('gw'); (e.requestFullscreen ? e.requestFullscreen() : Promise.reject()).catch(() => openGrafana()) };
+        drawKeys(); drawTabs(); stats(); health().then(() => loadGrafana()); setInterval(health, 15000);
+    </script>
 </body>
+
 </html>
