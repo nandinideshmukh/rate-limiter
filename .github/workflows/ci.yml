@@ -92,38 +92,38 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  # deploy-eks:
-  #   needs:
-  #     - ci
-  #     - publish
-  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: read
-  #     id-token: write
-  #   concurrency:
-  #     group: ratelimitx-eks-deployment
-  #     cancel-in-progress: false
-  #   steps:
-  #     - name: Check out source
-  #       uses: actions/checkout@v4
+  deploy-eks:
+    needs:
+      - ci
+      - publish
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: ratelimitx-eks-deployment
+      cancel-in-progress: false
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
 
-  #     - name: Configure AWS credentials with GitHub OIDC
-  #       uses: aws-actions/configure-aws-credentials@v4
-  #       with:
-  #         role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-  #         aws-region: ${{ vars.AWS_REGION }}
-  #         role-session-name: GitHubActionsRateLimitXDeploy
+      - name: Configure AWS credentials with GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: GitHubActionsRateLimitXDeploy
 
-  #     - name: Configure kubectl for EKS
-  #       run: aws eks update-kubeconfig --name "${{ vars.EKS_CLUSTER_NAME }}" --region "${{ vars.AWS_REGION }}"
+      - name: Configure kubectl for EKS
+        run: aws eks update-kubeconfig --name "${{ vars.EKS_CLUSTER_NAME }}" --region "${{ vars.AWS_REGION }}"
 
-  #     - name: Apply Kubernetes manifests
-  #       run: kubectl apply -k ./k8s
+      - name: Apply Kubernetes manifests
+        run: kubectl apply -k ./k8s
 
-  #     - name: Wait for rollout
-  #       run: |
-  #         kubectl rollout status deployment/ratelimitx -n ratelimitx --timeout=300s
-  #         kubectl rollout status deployment/redis -n ratelimitx --timeout=300s
-  #         kubectl rollout status deployment/prometheus -n ratelimitx --timeout=300s
-  #         kubectl rollout status deployment/grafana -n ratelimitx --timeout=300s
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/ratelimitx -n ratelimitx --timeout=300s
+          kubectl rollout status deployment/redis -n ratelimitx --timeout=300s
+          kubectl rollout status deployment/prometheus -n ratelimitx --timeout=300s
+          kubectl rollout status deployment/grafana -n ratelimitx --timeout=300s
