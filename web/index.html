@@ -678,10 +678,17 @@
             b.innerHTML = '<strong>The page cannot reach the API.</strong> Check that the RateLimitX service is running and reload the page.';
         }
 
-        /* ---------- Health checks (reachability only for other origins) ---------- */
+        /* ---------- Health checks ---------- */
         async function probe(url) {
             const ac = new AbortController(), t = setTimeout(() => ac.abort(), 4000);
-            try { await fetch(url, { mode: 'no-cors', cache: 'no-store', signal: ac.signal }); return true } catch (e) { return false } finally { clearTimeout(t) }
+            try {
+                const response = await fetch(url, {
+                    mode: new URL(url, location.href).origin === location.origin ? 'same-origin' : 'no-cors',
+                    cache: 'no-store',
+                    signal: ac.signal
+                });
+                return response.type === 'opaque' || response.ok;
+            } catch (e) { return false } finally { clearTimeout(t) }
         }
         function dot(el, c, t) { el.innerHTML = '<span class="d ' + c + '"></span>' + t }
         async function health() {
