@@ -200,7 +200,7 @@ The `deploy-eks` job in `.github/workflows/ci.yml` runs only for pushes to `main
          "Condition": {
            "StringEquals": {
              "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
-             "token.actions.githubusercontent.com:sub": "repo:nandinideshmukh/rate-limiter:ref:refs/heads/main"
+             "token.actions.githubusercontent.com:sub": "repo:nandinideshmukh@150786311/rate-limiter@1446791164:ref:refs/heads/main"
            }
          }
        }
