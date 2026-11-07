@@ -421,7 +421,8 @@
                         stroke-linecap="round" aria-hidden="true">
                         <path d="M4 17a8 8 0 0 1 16 0" />
                         <path d="M12 17l4-6" />
-                    </svg></div>
+                    </svg>
+                </div>
                 <div>
                     <div style="font-size:24px;font-weight:700">RateLimitX</div>
                     <div class="sub" style="margin:0"><em>Distributed Rate Limiter</em></div>
@@ -599,10 +600,9 @@
         { name: 'Latency analysis', panels: [5, 6, 7] },
         { name: 'Traffic and rejections', panels: [1, 2, 9, 8] },
         { name: 'Redis monitoring', none: true }];       // no Redis dashboard exists in the repo
-        const HOST = (location.hostname || 'localhost'),
-            GRAF = 'http://grafana.' + HOST + ':32065',
-            PROM = 'http://prometheus.' + HOST + ':32065'; const API_PATH = '/api/test';
-
+        const HOST = location.hostname || 'localhost';
+        const GRAF = 'http://grafana.' + HOST + ':32065';
+        const API_PATH = '/api/test';
         const $ = id => document.getElementById(id);
         const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         const sleep = ms => new Promise(r => setTimeout(r, ms));
