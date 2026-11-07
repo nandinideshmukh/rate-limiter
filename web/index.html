@@ -601,7 +601,7 @@
         { name: 'Traffic and rejections', panels: [1, 2, 9, 8] },
         { name: 'Redis monitoring', none: true }];       // no Redis dashboard exists in the repo
         const HOST = location.hostname || 'localhost';
-        const GRAF = 'http://grafana.' + HOST + ':32065';
+        const GRAF = 'http://3.7.37.251.nip.io:32065/grafana';
         const API_PATH = '/api/test';
         const $ = id => document.getElementById(id);
         const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -721,14 +721,21 @@
             if (t.none) { overlay(false, 'No Redis dashboard is provisioned in this repository, so nothing is linked here. Add a dashboard with its own UID to enable this tab.'); return }
             overlay(true);
             if (!(await probe(GRAF + '/api/health'))) { overlay(false, 'Grafana is inactive. Check that the monitoring services are running.'); return }
-            const urls = t.panels ? t.panels.map(id => GRAF + '/d-solo/' + UID + '/?' + qs() + '&panelId=' + id + '&theme=dark') : [GRAF + '/d/' + UID + '?' + qs() + '&kiosk'];
-            let loaded = 0;
+            const urls = t.panels
+                ? t.panels.map(id => GRAF + '/d-solo/' + UID + '/ratelimitx-distributed-rate-limiter-monitoring?' + qs() + '&panelId=' + id + '&theme=dark')
+                : [GRAF + '/d/' + UID + '/ratelimitx-distributed-rate-limiter-monitoring?' + qs() + '&kiosk']; let loaded = 0;
             box.className = t.panels ? 'gf' : '';
             urls.forEach(u => { const f = document.createElement('iframe'); f.src = u; f.title = 'Grafana dashboard'; f.style.height = t.panels ? '300px' : '760px'; f.onload = () => { if (++loaded === urls.length) overlay(false, '') }; box.appendChild(f) });
             setTimeout(() => { if (loaded < urls.length) overlay(false, 'Still waiting for Grafana. If the frame stays blank, Grafana is blocking embedding or needs a sign in. <br>Use Open in Grafana.') }, 12000);
         }
-        function openGrafana() { const t = TABS[tab]; window.open(GRAF + '/d/' + UID + '?' + qs() + (t.panels && t.panels.length === 1 ? '&viewPanel=' + t.panels[0] : ''), '_blank', 'noopener') }
-
+        function openGrafana() {
+            const t = TABS[tab];
+            window.open(
+                GRAF + '/d/' + UID + '/ratelimitx-distributed-rate-limiter-monitoring?' + qs(),
+                '_blank',
+                'noopener'
+            );
+        }
         /* ---------- Wiring ---------- */
         function drawKeys() {
             $('keys').innerHTML = '';
