@@ -11,7 +11,7 @@ resources:
   - redis/service.yaml
   - ingress/ingress.yaml
   - monitoring/prometheus/configmap.yaml
-  - monitoring/prometheus/rbac.yaml
+  - monitoring/prometheus/serviceaccount.yaml
   - monitoring/prometheus/pvc.yaml
   - monitoring/prometheus/deployment.yaml
   - monitoring/prometheus/service.yaml

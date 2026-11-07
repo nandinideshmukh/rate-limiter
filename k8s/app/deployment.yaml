@@ -3,17 +3,18 @@ kind: Deployment
 metadata:
   name: ratelimitx
   labels:
+    app: ratelimitx
     app.kubernetes.io/name: ratelimitx
     app.kubernetes.io/component: server
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app.kubernetes.io/name: ratelimitx
-      app.kubernetes.io/component: server
+      app: ratelimitx
   template:
     metadata:
       labels:
+        app: ratelimitx
         app.kubernetes.io/name: ratelimitx
         app.kubernetes.io/component: server
     spec:

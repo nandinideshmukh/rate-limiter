@@ -12,7 +12,8 @@ The Go container serves the frontend and API on port 8080. A two-replica Deploym
 | Deployment and Service `ratelimitx` | Runs two Go app pods and provides their stable in-cluster endpoint. |
 | Deployment and Service `redis` | Provides one shared, in-memory Redis instance. |
 | Ingress `ratelimitx` | Routes the `ratelimitx.local` host to the Go Service through an nginx Ingress Controller. |
-| Prometheus ConfigMap, ServiceAccount, Role, and RoleBinding | Configures five-second pod scraping and grants read-only access to pod discovery in this namespace. |
+| Prometheus ConfigMap and ServiceAccount | Configures five-second pod scraping and provides the identity used by Prometheus. |
+| Prometheus Role and RoleBinding | Administrator-managed, namespace-scoped permission for pod discovery; intentionally excluded from the GitHub Actions Kustomize deployment. |
 | Prometheus Deployment, Service, and PVC | Runs Prometheus, exposes its web UI inside the cluster, and stores its time series. |
 | Grafana provisioning ConfigMap, dashboard ConfigMap, Deployment, Service, and PVC | Provisions the existing Prometheus datasource and RateLimitX dashboard, and stores Grafana data. |
 
@@ -64,7 +65,13 @@ kubectl rollout status deployment/prometheus -n ratelimitx --timeout=180s
 kubectl rollout status deployment/grafana -n ratelimitx --timeout=180s
 ```
 
-The root Kustomization intentionally excludes `namespace.yaml`: it must already exist. This lets the EKS deployment role be scoped to `ratelimitx` rather than granting it permission to create or modify cluster-wide namespaces. Do not apply the manifests until the Ingress Controller and image access prerequisites are satisfied.
+The root Kustomization intentionally excludes `namespace.yaml`: it must already exist. This lets the EKS deployment role be scoped to `ratelimitx` rather than granting it permission to create or modify cluster-wide namespaces. It also excludes `monitoring/prometheus/rbac.yaml`; only a Kubernetes administrator should install or update the Prometheus Role and RoleBinding. If those resources are not already present, an administrator can apply them once with:
+
+```powershell
+kubectl apply -n ratelimitx -f .\k8s\monitoring\prometheus\rbac.yaml
+```
+
+The ServiceAccount is a separate manifest and remains included in the normal Kustomize deployment. Do not apply the manifests until the Ingress Controller and image access prerequisites are satisfied.
 
 ## Inspect workloads and logs
 
@@ -223,7 +230,7 @@ The `deploy-eks` job in `.github/workflows/ci.yml` runs only for pushes to `main
    aws eks associate-access-policy --cluster-name <cluster-name> --principal-arn <github-actions-role-arn> --policy-arn arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy --access-scope type=namespace,namespaces=ratelimitx
    ```
 
-   This gives the role administrative permissions within the app namespace so it can manage the Deployments, Services, PVCs, ConfigMaps, and Prometheus RBAC resources in these manifests; it does not grant namespace-creation rights. Use an EKS cluster authentication mode that supports access entries.
+   The workflow role needs namespace-scoped permissions for the Deployments, Services, PVCs, ConfigMaps, and ServiceAccounts in the Kustomize resources. It does not need permission to manage Roles or RoleBindings: those are installed by a Kubernetes administrator and are excluded from `kubectl apply -k ./k8s`. It also does not need namespace-creation rights. Use an EKS cluster authentication mode that supports access entries.
 
 6. In the GitHub repository, open **Settings → Secrets and variables → Actions → Variables** and add:
 

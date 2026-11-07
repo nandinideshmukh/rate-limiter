@@ -3,17 +3,18 @@ kind: Deployment
 metadata:
   name: redis
   labels:
+    app: redis
     app.kubernetes.io/name: redis
     app.kubernetes.io/component: cache
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: redis
-      app.kubernetes.io/component: cache
+      app: redis
   template:
     metadata:
       labels:
+        app: redis
         app.kubernetes.io/name: redis
         app.kubernetes.io/component: cache
     spec:
