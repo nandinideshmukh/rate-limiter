@@ -36,6 +36,60 @@ The deployment included:
 - Grafana for monitoring and dashboards.
 - Kubernetes Services, Deployments, ConfigMaps, and Persistent Volume Claims.
 
+For a beginner-friendly explanation of Kubernetes, EKS, and the AWS and
+Kubernetes objects used by this deployment, see [info.md](./info.md).
+
+### EKS system pods and observed deployments
+
+The application depends on cluster-level pods as well as its own workload
+pods. The `kube-system` pods below are EKS networking, DNS, storage, and
+workload-identity components; EKS or Kubernetes controllers keep them running.
+They are not extra RateLimitX replicas and are not normally added to the
+application Deployment.
+
+| Observed pod | Namespace | Reason it is needed |
+|---|---|---|
+| `aws-node-nfxj7`, `aws-node-t9n2b` | `kube-system` | AWS VPC CNI networking runs on worker nodes. It assigns pod network addresses and connects pod networking to the VPC. |
+| `coredns-d8ffbc54f-hm6qz`, `coredns-d8ffbc54f-w95sj` | `kube-system` | CoreDNS provides in-cluster DNS. Services such as `redis` can be reached by their Kubernetes DNS names instead of fixed IP addresses. |
+| `ebs-csi-controller-569b4bd7df-dzvqz`, `ebs-csi-controller-569b4bd7df-vgkmh` | `kube-system` | The EBS CSI controller coordinates AWS EBS volume provisioning and attachment for persistent-volume claims. The two replicas provide controller availability. |
+| `ebs-csi-node-9vx5c`, `ebs-csi-node-tm84c` | `kube-system` | The EBS CSI node plugin runs on worker nodes and makes attached EBS volumes usable by pods. It is needed for PVC-backed storage such as Prometheus and Grafana data. |
+| `eks-pod-identity-agent-4bnlk`, `eks-pod-identity-agent-krtwp` | `kube-system` | The EKS Pod Identity Agent supports assigning AWS IAM permissions to Kubernetes workloads. It is cluster infrastructure and is useful when a pod needs AWS API access without static credentials. |
+
+The pod names above are the instances observed at that time; suffixes can
+change when Kubernetes replaces a pod or rolls out an update. The captured
+list marked the first identity-agent pod as Running; it did not include a
+status for the second.
+
+The EKS console also showed these Deployments and replica counts:
+
+| Deployment | Namespace | Observed state | Reason it is needed |
+|---|---|---|---|
+| `coredns` | `kube-system` | 2 desired, 2 available, 2 ready | Provides DNS-based discovery for cluster Services and pod names. |
+| `ebs-csi-controller` | `kube-system` | 2 desired, 2 available, 2 ready | Manages EBS volume lifecycle operations requested through Kubernetes storage resources. |
+| `metrics-server` | `kube-system` | 2 desired, 2 available, 2 ready | Collects resource-usage metrics used by Kubernetes commands and autoscaling features. |
+| `nginx-ingress` | `nginx-ingress` | 1 desired, 1 available, 1 ready | Runs the ingress controller that accepts HTTP traffic and routes it to the app or Grafana Services. |
+| `ratelimitx` | `ratelimitx` | 2 desired, 2 available, 2 ready | Runs the Go rate-limiter application; two replicas improve availability and share rate-limit state through Redis. |
+| `redis` | `ratelimitx` | Deployment observed; replica state not included | Holds shared rate-limiting state so app replicas can make consistent decisions. |
+| `prometheus` | `ratelimitx` | 1 desired, 1 available, 1 ready | Scrapes and stores application and cluster metrics. |
+| `grafana` | `ratelimitx` | 1 desired, 1 available, 1 ready | Displays the collected metrics in dashboards. |
+
+### ControllerRevisions
+
+The cluster also showed these `ControllerRevision` objects:
+
+| ControllerRevision | What it records |
+|---|---|
+| `aws-node-69c95c68b6` | A revision of the `aws-node` controller configuration. |
+| `ebs-csi-node-7558dc955b` | A revision of the EBS CSI node plugin configuration. |
+| `ebs-csi-node-windows-66df487468` | A revision for the EBS CSI node plugin's Windows variant. |
+| `eks-pod-identity-agent-5ff7fcf94c` | A revision of the EKS Pod Identity Agent controller configuration. |
+| `kube-proxy-685d47849f` | A revision of the `kube-proxy` controller configuration, which supports Kubernetes Service networking. |
+
+ControllerRevisions are rollout-history objects maintained by Kubernetes
+controllers; they are not pods and do not represent additional running
+workloads. Their presence helps controllers track configuration versions
+during updates and rollbacks.
+
 ### Problems encountered
 
 #### A. GitHub Actions OIDC authentication failure
