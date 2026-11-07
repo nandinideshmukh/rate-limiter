@@ -601,7 +601,7 @@
         { name: 'Traffic and rejections', panels: [1, 2, 9, 8] },
         { name: 'Redis monitoring', none: true }];       // no Redis dashboard exists in the repo
         const HOST = location.hostname || 'localhost';
-        const GRAF = 'http://3.7.37.251.nip.io:32065/grafana';
+        const GRAF = 'http://grafana.3.7.37.251.nip.io:32065';
         const API_PATH = '/api/test';
         const $ = id => document.getElementById(id);
         const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -681,14 +681,7 @@
         /* ---------- Health checks ---------- */
         async function probe(url) {
             const ac = new AbortController(), t = setTimeout(() => ac.abort(), 4000);
-            try {
-                const response = await fetch(url, {
-                    mode: new URL(url, location.href).origin === location.origin ? 'same-origin' : 'no-cors',
-                    cache: 'no-store',
-                    signal: ac.signal
-                });
-                return response.type === 'opaque' || response.ok;
-            } catch (e) { return false } finally { clearTimeout(t) }
+            try { const response = await fetch(url, { cache: 'no-store', signal: ac.signal }); return response.ok } catch (e) { return false } finally { clearTimeout(t) }
         }
         function dot(el, c, t) { el.innerHTML = '<span class="d ' + c + '"></span>' + t }
         async function health() {
@@ -712,7 +705,7 @@
             } catch {
                 dot($('iProm'), 'bad', 'Inactive');
             }
-            const g = await probe(GRAF + '/api/health'); dot($('iGraf'), g ? 'ok' : 'bad', g ? 'Active' : 'Inactive');
+            const g = await probe('/health/grafana'); dot($('iGraf'), g ? 'ok' : 'bad', g ? 'Active' : 'Inactive');
             return g;
         }
 
@@ -727,7 +720,7 @@
             const t = TABS[tab], box = $('gframes'); box.innerHTML = '';
             if (t.none) { overlay(false, 'No Redis dashboard is provisioned in this repository, so nothing is linked here. Add a dashboard with its own UID to enable this tab.'); return }
             overlay(true);
-            if (!(await probe(GRAF + '/api/health'))) { overlay(false, 'Grafana is inactive. Check that the monitoring services are running.'); return }
+            if (!(await probe('/health/grafana'))) { overlay(false, 'Grafana is inactive. Check that the monitoring services are running.'); return }
             const urls = t.panels
                 ? t.panels.map(id => GRAF + '/d-solo/' + UID + '/ratelimitx-distributed-rate-limiter-monitoring?' + qs() + '&panelId=' + id + '&theme=dark')
                 : [GRAF + '/d/' + UID + '/ratelimitx-distributed-rate-limiter-monitoring?' + qs() + '&kiosk']; let loaded = 0;

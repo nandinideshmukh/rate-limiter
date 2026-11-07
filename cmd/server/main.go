@@ -61,36 +61,15 @@ func newMux(manager *policy.Manager) *http.ServeMux {
 		fmt.Fprintln(w, "Server is healthy!")
 	})
 
-	mux.HandleFunc("/health/prometheus", func(w http.ResponseWriter, r *http.Request) {
-		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
-		defer cancel()
+	mux.Handle("/health/prometheus", healthCheckHandler(
+		"http://prometheus:9090/-/healthy",
+		"Prometheus",
+	))
 
-		req, err := http.NewRequestWithContext(
-			ctx,
-			http.MethodGet,
-			"http://prometheus:9090/-/healthy",
-			nil,
-		)
-		if err != nil {
-			http.Error(w, "Prometheus unavailable", http.StatusServiceUnavailable)
-			return
-		}
-
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			http.Error(w, "Prometheus unavailable", http.StatusServiceUnavailable)
-			return
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			http.Error(w, "Prometheus unhealthy", http.StatusServiceUnavailable)
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, "Prometheus is healthy")
-	})
+	mux.Handle("/health/grafana", healthCheckHandler(
+		"http://grafana:3000/api/health",
+		"Grafana",
+	))
 
 	apiHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		instance := os.Getenv("INSTANCE_ID")
@@ -100,6 +79,39 @@ func newMux(manager *policy.Manager) *http.ServeMux {
 	mux.Handle("/api/", middleware.RateLimit(apiHandler, manager))
 	mux.Handle("/metrics", promhttp.Handler())
 	return mux
+}
+
+func healthCheckHandler(targetURL, serviceName string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+
+		req, err := http.NewRequestWithContext(
+			ctx,
+			http.MethodGet,
+			targetURL,
+			nil,
+		)
+		if err != nil {
+			http.Error(w, serviceName+" unavailable", http.StatusServiceUnavailable)
+			return
+		}
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			http.Error(w, serviceName+" unavailable", http.StatusServiceUnavailable)
+			return
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			http.Error(w, serviceName+" unhealthy", http.StatusServiceUnavailable)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, serviceName+" is healthy")
+	})
 }
 
 func redisAddress() string {

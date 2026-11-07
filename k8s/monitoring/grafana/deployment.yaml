@@ -33,9 +33,9 @@ spec:
               protocol: TCP
           env:
             - name: GF_SERVER_ROOT_URL
-              value: "http://3.7.37.251.nip.io:32065/grafana/"
+              value: "http://grafana.3.7.37.251.nip.io:32065/"
             - name: GF_SERVER_SERVE_FROM_SUB_PATH
-              value: "true"
+              value: "false"
             - name: GF_SECURITY_ALLOW_EMBEDDING
               value: "true"
             - name: GF_AUTH_ANONYMOUS_ENABLED

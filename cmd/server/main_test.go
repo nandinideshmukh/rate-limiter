@@ -136,6 +136,38 @@ func TestMetricsEndpoint(t *testing.T) {
 	}
 }
 
+func TestHealthCheckHandler(t *testing.T) {
+	tests := []struct {
+		name       string
+		statusCode int
+		wantStatus int
+		wantBody   string
+	}{
+		{name: "healthy", statusCode: http.StatusOK, wantStatus: http.StatusOK, wantBody: "Grafana is healthy"},
+		{name: "unhealthy", statusCode: http.StatusNotFound, wantStatus: http.StatusServiceUnavailable, wantBody: "Grafana unhealthy"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(tt.statusCode)
+			}))
+			defer upstream.Close()
+
+			handler := healthCheckHandler(upstream.URL, "Grafana")
+			response := httptest.NewRecorder()
+			handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/health/grafana", nil))
+
+			if response.Code != tt.wantStatus {
+				t.Fatalf("status = %d, want %d", response.Code, tt.wantStatus)
+			}
+			if !strings.Contains(response.Body.String(), tt.wantBody) {
+				t.Errorf("body = %q, want it to contain %q", response.Body.String(), tt.wantBody)
+			}
+		})
+	}
+}
+
 func TestIndexPage(t *testing.T) {
 	handler := newMux(nil)
 	response := httptest.NewRecorder()
