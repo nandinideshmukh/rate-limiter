@@ -1,4 +1,3 @@
-
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -9,9 +8,9 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: ratelimitx.local
-      http:
+    - http:
         paths:
+          # RateLimitX
           - path: /
             pathType: Prefix
             backend:
@@ -20,10 +19,8 @@ spec:
                 port:
                   number: 8080
 
-    - host: grafana.ratelimitx.local
-      http:
-        paths:
-          - path: /
+          # Grafana
+          - path: /grafana
             pathType: Prefix
             backend:
               service:
