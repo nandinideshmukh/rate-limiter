@@ -8,9 +8,9 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - http:
+    - host: 3.7.37.251.nip.io
+      http:
         paths:
-          # RateLimitX
           - path: /
             pathType: Prefix
             backend:
@@ -19,7 +19,6 @@ spec:
                 port:
                   number: 8080
 
-          # Grafana
           - path: /grafana
             pathType: Prefix
             backend:
